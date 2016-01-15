@@ -46,7 +46,7 @@ If you discover any security related issues, please email info@netgloo.com inste
 
 ## Credits
 
-- [Netgloo][http://netgloo.com/en]
+- [Netgloo][link-author]
 
 <!--
 - [All Contributors][link-contributors]
