@@ -33,7 +33,8 @@ Please see [changelog](changelog.md) for more information what has changed recen
 
 ``` bash
 $ composer test
--->```
+```
+-->
 
 ## Contributing
 
