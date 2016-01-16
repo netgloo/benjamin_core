@@ -31,7 +31,7 @@ Add the service provider to Laravel, in `config/app.php`:
 
 Add publish scripts on `post-install-cmd` and `post-update-cmd` events on project's root `composer.json`, to enable auto publishing of public assets:
 
-``` json
+``` javascript
   "scripts": {
     "post-install-cmd": [
       //
