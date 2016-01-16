@@ -128,7 +128,7 @@ class PagesController extends BaseController
 
       $pages[] = $page;
     }
-
+dd($pages);
     // Cache the value
     if ($cacheEnabled) {
       Cache::forever($pagesKey, $pages);
@@ -184,9 +184,10 @@ class PagesController extends BaseController
    * 
    * These files will be skipped:
    *   - Each file or directory starting with '_'
-   *   - Directory /app
+   *   - Directory /errors
    *   - Directory /layouts
    *   - Directory /templates
+   *   - Directory /vendor
    *   - Files not ending with '.blade.php'
    * 
    * @param $dirPath (String)
@@ -210,8 +211,8 @@ class PagesController extends BaseController
         if (!$checkSubDir) {
           continue;
         }
-        if ($filename === 'app' || $filename === 'layouts' || 
-            $filename === 'templates') {
+        if ($filename === 'errors' || $filename === 'layouts' || 
+            $filename === 'templates' || $filename === 'vendor') {
           continue;
         }
         // $subViews = self::getViewsList($fileInfo->getPathname(), false);
