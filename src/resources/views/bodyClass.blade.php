@@ -1,1 +1,1 @@
-{{ $bodyClass }}
+{{ isset($bodyClass) ? $bodyClass : '' }}
