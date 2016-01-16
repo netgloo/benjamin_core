@@ -9,10 +9,9 @@
   ],
   "homepage": "https://github.com/netgloo/benjamin_core",
   "license": "MIT",
-  "authors": [
-    {
-      "name": "Andrea Zanelli",
-      "email": "andrea.zanelli@netgloo.com",
+  "authors": [{
+      "name": "Netgloo",
+      "email": "info@netgloo.com",
       "homepage": "http://netgloo.com/en",
       "role": "Developer"
     }
@@ -28,16 +27,20 @@
   },
   "autoload": {
     "psr-4": {
-      "netgloo\\benjamin_core\\": "src"
-    }
+      "Netgloo\\BenjaminCore\\": "src"
+    },
+    "files": [
+      "src/Support/helpers.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {
-      "netgloo\\benjamin_core\\Test\\": "tests"
+      "Netgloo\\BenjaminCore\\Test\\": "tests"
     }
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "post-update-cmd": "php artisan vendor:publish --tag=public --force"
   },
   "extra": {
     "branch-alias": {
