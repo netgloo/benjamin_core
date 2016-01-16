@@ -7,7 +7,7 @@
 <!-- [![Quality Score][ico-code-quality]][link-code-quality] -->
 <!-- [![Total Downloads][ico-downloads]][link-downloads] -->
 
-**Note:** This is the core code for the Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjami).
+**Note:** This is the core code for the Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjamin).
 
 ### Install
 
