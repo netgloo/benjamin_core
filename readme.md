@@ -11,13 +11,13 @@
 
 ### Install
 
-Via Composer
+Add the package via Composer
 
 ``` bash
 $ composer require netgloo/benjamin_core
 ```
 
-Add the service provider to Laravel, in `config/app.php`:
+Add the service provider to Laravel, in `config/app.php`
 
 ``` php
   'providers' => [
@@ -30,7 +30,7 @@ Add the service provider to Laravel, in `config/app.php`:
 ```
 
 <!--
-## Usage
+### Usage
 
 ``` php
 $skeleton = new League\Skeleton();
