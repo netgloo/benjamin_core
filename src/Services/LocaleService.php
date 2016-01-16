@@ -106,12 +106,19 @@ class LocaleService
       return $pathInfo;
     }
 
+    // The path is just the root
+    if ($path === '/') {
+      return $pathInfo;
+    }
+
     // Remove the default language from the available list
     if (($index = array_search($defaultLang, $availableLangs)) !== false) {
       unset($availableLangs[$index]);
     }
 
     // Check if there is a language sub-dir inside the path 
+    // Note: $path always start with '/', it never has a trailing slash and
+    // we have exluded the root case ('/') before
     $explodedPath = explode('/', $path);
     $isLangDir = in_array($explodedPath[1], $availableLangs);
 
@@ -119,8 +126,13 @@ class LocaleService
     if ($isLangDir) {
       $pathInfo->lang = $explodedPath[1];
       $pathInfo->langDir = $explodedPath[1];
-      unset($explodedPath[1]);
-      $pathInfo->pagePath = implode('/', $explodedPath);
+      if (count($explodedPath) <= 2) {
+        $pathInfo->pagePath = '/';
+      }
+      else {
+        unset($explodedPath[1]);
+        $pathInfo->pagePath = implode('/', $explodedPath);
+      }
     }
 
     return $pathInfo;

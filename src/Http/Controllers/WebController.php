@@ -2,6 +2,7 @@
 
 namespace Netgloo\BenjaminCore\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 use Netgloo\BenjaminCore\Exceptions\PathNotFoundException;
@@ -17,15 +18,22 @@ class WebController extends BaseController
    * @param $pagePath (String)
    * @return Response
    */
-  public function showPage($path = '')
+  public function showPage(Request $request, $path = '')
   {
+    // Redirect trailing slash
+    $uri = $request->getRequestUri();
+    // if (preg_match('/(.+)\/$/', $request->getRequestUri()) !== 0)
+    if (strlen($uri) > 1 && substr($uri, -1) === '/') {
+      return redirect(rtrim($request->path(), '/'), 301);
+    }
+
     // Parse the request path and set the locale value
     $pathInfo = LocaleService::parsePath($path);
     $pagePath = $pathInfo->pagePath;
     app('translator')->setLocale($pathInfo->lang);
 
     // 'index' is a reserved name
-    if ($pagePath === 'index') {
+    if ($pagePath === '/index') {
       error_log("index is a reserved name.");
       abort(404);
     }
@@ -38,8 +46,13 @@ class WebController extends BaseController
     }
 
     // Compute the view name to be showed
-    $showView = ($pagePath === '/') ? 
-      'index' : str_replace('/', '.', $pagePath);
+    $showView = '';
+    if ($pagePath === '/') {
+      $showView = 'index';
+    }
+    else {
+      $showView = ltrim(str_replace('/', '.', $pagePath), '.');
+    }
 
     // Initialize the LocaleLinkService used inside views to set links
     LocaleLinkService::setLang($pathInfo->lang);
@@ -47,7 +60,6 @@ class WebController extends BaseController
     LocaleLinkService::setPagePath($pathInfo->pagePath);
 
     // Return the requested view
-    // return view($showView, ['app' => 'app.html']);
     return view($showView, ['benjamin' => 'benjamin::html']);
   }
 
