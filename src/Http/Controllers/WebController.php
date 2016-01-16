@@ -54,6 +54,11 @@ class WebController extends BaseController
       $showView = ltrim(str_replace('/', '.', $pagePath), '.');
     }
 
+    // If the view doesn't exists return a 404 Not Found
+    if (!view()->exists($showView)) {
+      abort(404, "View not found: $showView");
+    }
+
     // Initialize the LocaleLinkService used inside views to set links
     LocaleLinkService::setLang($pathInfo->lang);
     LocaleLinkService::setLangDir($pathInfo->langDir);
