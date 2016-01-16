@@ -11,13 +11,13 @@
 
 ### Install
 
-Add the package via Composer
+Add the package via Composer:
 
 ``` bash
 $ composer require netgloo/benjamin_core
 ```
 
-Add the service provider to Laravel, in `config/app.php`
+Add the service provider to Laravel, in `config/app.php`:
 
 ``` php
   'providers' => [
@@ -27,6 +27,21 @@ Add the service provider to Laravel, in `config/app.php`
     Netgloo\BenjaminCore\BenjaminCoreServiceProvider::class,
 
   ]
+```
+
+Add publish scripts on `post-install-cmd` and `post-update-cmd` events on project's root `composer.json`, to enable auto publishing of public assets:
+
+``` json
+  "scripts": {
+    "post-install-cmd": [
+      //
+      "php artisan vendor:publish --tag=public --force"
+    ],
+    "post-update-cmd": [
+      //
+      "php artisan vendor:publish --tag=public --force"
+    ],
+  }
 ```
 
 <!--

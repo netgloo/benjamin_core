@@ -31,12 +31,6 @@
     }
   },
   "scripts": {
-    "post-install-cmd": [
-      "php artisan vendor:publish --tag=public --force"
-    ],
-    "post-update-cmd": [
-      "php artisan vendor:publish --tag=public --force"
-    ],
     "test": "phpunit"
   },
   "extra": {
