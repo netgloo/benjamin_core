@@ -7,7 +7,7 @@
 <!-- [![Quality Score][ico-code-quality]][link-code-quality] -->
 <!-- [![Total Downloads][ico-downloads]][link-downloads] -->
 
-**Note:** This is the core code for the Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjamin).
+**Note:** This is the core code for Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjamin) instead.
 
 ### Install
 
@@ -15,6 +15,18 @@ Via Composer
 
 ``` bash
 $ composer require netgloo/benjamin_core
+```
+
+Add the service provider to Laravel, in `config/app.php`:
+
+``` php
+  'providers' => [
+    
+    //
+
+    Netgloo\BenjaminCore\BenjaminCoreServiceProvider::class,
+
+  ]
 ```
 
 <!--
