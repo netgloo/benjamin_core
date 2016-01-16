@@ -6,7 +6,7 @@
 |-------------------------------------------------------------------------------
 */
 
-// Route::get('/api/pages', 'Api\PagesController@getAll');
+Route::get('/api/pages', 'Api\PagesController@getAll');
 // Route::get('/api/emails/sendContactMail', 'Api\EmailsController@sendContactMail');
 
 /*

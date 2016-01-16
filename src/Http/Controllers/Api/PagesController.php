@@ -111,19 +111,19 @@ class PagesController extends BaseController
       // Page title
       $page->title = view(
         $viewName, 
-        ['app' => 'app.title']
+        ['benjamin' => 'benjamin::title']
       )->render();
 
       // Page body
       $page->body = view(
         $viewName, 
-        ['app' => 'app.body']
+        ['benjamin' => 'benjamin::body']
       )->render();
 
       // bodyClass
       $page->bodyClass = view(
         $viewName, 
-        ['app' => 'app.bodyClass']
+        ['benjamin' => 'benjamin::bodyClass']
       )->render();
 
       $pages[] = $page;
@@ -142,9 +142,9 @@ class PagesController extends BaseController
   }
 
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
   // PRIVATES
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
 
    /**
    * Returns the last modification time for all files and directories inside 

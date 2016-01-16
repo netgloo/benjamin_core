@@ -15,20 +15,21 @@ class BenjaminCoreServiceProvider extends ServiceProvider
    */
   public function boot()
   {
-    // // Require routes
-    // if (!$this->app->routesAreCached()) {
-    //   require __DIR__ . '/../../routes.php';
-    // }
-
     // Require routes
-    $this->setupRoutes($this->app->router);
+    if (!$this->app->routesAreCached()) {
+      $this->app->router->group(
+        ['namespace' => 'Netgloo\BenjaminCore\Http\Controllers'], 
+        function() {
+          require __DIR__ . '/Http/routes.php';
+        }
+      );
+    }
 
     // Require views
     $this->loadViewsFrom(
       realpath(__DIR__ . '/resources/views'), 
-      'benjamin_core'
+      'benjamin'
     );
-    
 
     // Use this if your package needs a config file
     // $this->publishes([
@@ -42,30 +43,11 @@ class BenjaminCoreServiceProvider extends ServiceProvider
 
     // Publish assets
     $this->publishes([
-        __DIR__ . '/public' => public_path('vendor/benjamin'),
+        __DIR__ . '/public' => public_path(''),
       ], 
       'public'
     );
 
-    return;
-  }
-
-
-  /**
-   * Define the routes for the application.
-   *
-   * @param  \Illuminate\Routing\Router  $router
-   * @return void
-   */
-  public function setupRoutes(Router $router)
-  {
-    $router->group(
-      ['namespace' => 'Netgloo\BenjaminCore\Http\Controllers'], 
-      function($router) 
-      {
-        require __DIR__ . '/Http/routes.php';
-      }
-    );
     return;
   }
 
@@ -77,12 +59,16 @@ class BenjaminCoreServiceProvider extends ServiceProvider
    */
   public function register()
   {
-    $this->registerSkeleton();
+    // Register BenjaminCore
+    // $this->app->bind('BenjaminCore', function($app) {
+    //   return new BenjaminCore($app);
+    // });
     
-    // use this if your package has a config file
+    // Register config file
     // config([
-    //         'config/benjamin_core.php',
+    //   'config/benjamin_core.php',
     // ]);
+
     return;
   }
 
@@ -93,17 +79,5 @@ class BenjaminCoreServiceProvider extends ServiceProvider
    * @var bool
    */
   protected $defer = false;
-
-
-  /**
-   * Register BenjaminCore
-   */
-  private function registerSkeleton()
-  {
-    $this->app->bind('benjamin_core',function($app){
-      return new BenjaminCore($app);
-    });
-    return;
-  }
 
 }

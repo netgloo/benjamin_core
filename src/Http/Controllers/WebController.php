@@ -48,7 +48,7 @@ class WebController extends BaseController
 
     // Return the requested view
     // return view($showView, ['app' => 'app.html']);
-    return view($showView, ['app' => 'benjamin_core::html']);
+    return view($showView, ['benjamin' => 'benjamin::html']);
   }
 
 
