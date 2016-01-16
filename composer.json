@@ -3,19 +3,11 @@
   "type": "library",
   "description": "Benjamin's core",
   "keywords": [
-    "netgloo",
-    "benjamin",
-    "benjamin_core"
+    "netgloo", "benjamin", "benjamin_core"
   ],
   "homepage": "https://github.com/netgloo/benjamin_core",
   "license": "MIT",
-  "authors": [{
-      "name": "Netgloo",
-      "email": "info@netgloo.com",
-      "homepage": "http://netgloo.com/en",
-      "role": "Developer"
-    }
-  ],
+  "authors": [{ "name": "Netgloo" }],
   "require": {
     "illuminate/support": "~5.1",
     "php" : ">=5.4.0"

@@ -1,4 +1,4 @@
-# Benjamin Core
+## Benjamin Core
 
 <!-- [![Latest Version on Packagist][ico-version]][link-packagist] -->
 <!-- [![Software License][ico-license]](license.md) -->
@@ -7,7 +7,9 @@
 <!-- [![Quality Score][ico-code-quality]][link-code-quality] -->
 <!-- [![Total Downloads][ico-downloads]][link-downloads] -->
 
-## Install
+**Note:** This is the core code for the Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjami).
+
+### Install
 
 Via Composer
 
@@ -24,7 +26,7 @@ echo $skeleton->echoPhrase('Hello, League!');
 ```
 -->
 
-## Change log
+### Change log
 
 Please see [changelog](changelog.md) for more information what has changed recently.
 
@@ -36,23 +38,23 @@ $ composer test
 ```
 -->
 
-## Contributing
+### Contributing
 
 Please see [contributing](contributing.md) and [conduct](conduct.md) for details.
 
-## Security
+### Security
 
 If you discover any security related issues, please email info@netgloo.com instead of using the issue tracker.
 
+<!--
 ## Credits
 
 - [Netgloo][link-author]
 
-<!--
 - [All Contributors][link-contributors]
 -->
 
-## License
+### License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
