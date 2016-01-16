@@ -15,24 +15,38 @@ class BenjaminCoreServiceProvider extends ServiceProvider
    */
   public function boot()
   {
-    // use this if your package has views
+    // // Require routes
+    // if (!$this->app->routesAreCached()) {
+    //   require __DIR__ . '/../../routes.php';
+    // }
+
+    // Require routes
+    $this->setupRoutes($this->app->router);
+
+    // Require views
     $this->loadViewsFrom(
       realpath(__DIR__ . '/resources/views'), 
       'benjamin_core'
     );
     
-    // use this if your package has routes
-    $this->setupRoutes($this->app->router);
-    
-    // use this if your package needs a config file
+
+    // Use this if your package needs a config file
     // $this->publishes([
-    //         __DIR__.'/config/config.php' => config_path('skeleton.php'),
+    //         __DIR__.'/config/config.php' => config_path('benjamin_core.php'),
     // ]);
     
-    // use the vendor configuration file as fallback
+    // Use the vendor configuration file as fallback
     // $this->mergeConfigFrom(
-    //     __DIR__.'/config/config.php', 'skeleton'
+    //     __DIR__.'/config/config.php', 'benjamin_core'
     // );
+
+    // Publish assets
+    $this->publishes([
+        __DIR__ . '/public' => public_path('vendor/benjamin'),
+      ], 
+      'public'
+    );
+
     return;
   }
 

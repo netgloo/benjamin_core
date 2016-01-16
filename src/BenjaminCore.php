@@ -4,16 +4,14 @@ namespace Netgloo\BenjaminCore;
 
 class BenjaminCore
 {
-
   /**
-   * Create a new Skeleton Instance
+   * Create a new BenjaminCore Instance
    */
   public function __construct()
   {
     // constructor body
     return;
   }
-
 
   /**
    * Friendly welcome
