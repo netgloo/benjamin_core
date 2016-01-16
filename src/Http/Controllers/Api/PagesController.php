@@ -128,7 +128,7 @@ class PagesController extends BaseController
 
       $pages[] = $page;
     }
-dd($pages);
+
     // Cache the value
     if ($cacheEnabled) {
       Cache::forever($pagesKey, $pages);
