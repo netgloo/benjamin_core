@@ -9,7 +9,9 @@ if (!isset($head) || empty($head)) {
 <!DOCTYPE html>
 <html>
   <head>
-    @include($head)
+    @if (view()->exists($head))
+      @include($head)
+    @endif
     <title>@yield('title')</title>
   </head>
   <body class="{{ $bodyClass }}" >
