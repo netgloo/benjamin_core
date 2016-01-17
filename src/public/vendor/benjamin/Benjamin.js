@@ -1,18 +1,20 @@
 /*!
- * Copyright 2015, Netgloo
+ * Copyright 2016, Netgloo
  * Released under the MIT License
  */
 
+(function() {
+
 var Benjamin = {
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
   // PUBLICS
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
 
   /**
-   * Set up the Benjamin object
+   * Set up the Benjamin object.
    */
-  config: function(settings) {
+  init: function(settings) {
 
     // Main configurations: run these only once
     if (!this._isConfigured) {
@@ -29,6 +31,9 @@ var Benjamin = {
         history.replaceState({ 'url': currentUrl }, currentTitle, currentUrl);
       }
 
+      // Current page
+      this._currentPage = this._getPagePath(window.location.pathname);
+
       // Start load pages (async)
       this._loadPages();
 
@@ -39,37 +44,12 @@ var Benjamin = {
         this._bindLinks();
 
         // Calls to ready callbacks
-        var currentPath = this._getPagePath(window.location.pathname);
         this._ready();
-        this._readyPage(currentPath);
+        this._readyPage(this._currentPage);
 
       }.bind(this));
 
     } // if (!this._isConfigured)
-
-    // Register global callbacks
-    if (typeof settings['before'] === 'function') {
-      this._before = settings['before'];
-    }
-    if (typeof settings['after'] === 'function') {
-      this._after = settings['after'];
-    }
-    if (typeof settings['ready'] === 'function') {
-      this._ready = settings['ready'];
-    }
-
-    // Register pages' callbacks
-    for (var property in settings) {
-
-      if (!settings.hasOwnProperty(property)) {
-        continue;
-      }
-      if (property.charAt(0) !== '/') {
-        continue;
-      }
-      this._pagesConf[property] = settings[property];
-
-    } // for
 
     return;
   },
@@ -83,9 +63,128 @@ var Benjamin = {
   },
 
 
-  // ---------------------------------------------------------------------------
+  /**
+   * Bind a callback to an event.
+   * 
+   * Usage:
+   *   on(Object)          --> Bind global events. 
+   *   on(String, Object)  --> Bind per-page events.
+   */
+  on: function(first, second) {
+
+    // If the first parameter is a string --> go to bind per-page events.
+    if (typeof first === 'string' || first instanceof String) {
+      this.onPage(first, second);
+      return;
+    }
+
+    // Get events
+    for (var property in first) {
+
+      if (!first.hasOwnProperty(property)) {
+        continue;
+      }
+
+      if (typeof first[property] !== 'function') {
+        console.log(
+          "Warning: the callback for " + property + " is not a function"
+        );
+        return;
+      }
+
+      switch (property) {
+        case 'init':
+          // We run the init callback just now (binding this to window)
+          first[property].call(window);
+          break;
+        case 'after':
+          this._after = first[property];
+          break;
+        case 'out':
+          this._out = first[property];
+          break;
+        case 'ready':
+          this._ready = first[property];
+          break;
+        default:
+          console.log("Warning: invalid event name: " + property);
+          break;
+      }
+
+    } // for property
+
+    return;
+  },
+
+
+  /**
+   * Bind a callback on a page's event. The same as on(String, Object)
+   *
+   * @param pagePath (String)
+   * @param callbacks (Object)
+   */
+  onPage: function(pagePath, callbacks) {
+
+    // Check pagePath
+    if (pagePath.length === 0 || pagePath.charAt(0) !== '/') {
+      console.log("Warning: invalid page name: " + pagePath);
+      return;
+    }
+
+    // Get callbacks
+    for (var property in callbacks) {
+
+      if (!callbacks.hasOwnProperty(property)) {
+        continue;
+      }
+
+      var validName = property === 'after' 
+        || property === 'out' 
+        || property === 'ready';
+        
+      if (!validName) {
+        console.log("Warning: invalid event name: " + property);
+        return;
+      }
+
+      if (typeof callbacks[property] !== 'function') {
+        console.log(
+          "Warning: the callback for " + property + " is not a function"
+        );
+        return;
+      }
+
+      if (this._pagesCallbacks[pagePath] === undefined) {
+        this._pagesCallbacks[pagePath] = { };
+      }
+      this._pagesCallbacks[pagePath][property] = callbacks[property];
+
+    } // for property
+
+    return;
+  },
+
+
+  // --------------------------------------------------------------------------
   // PRIVATES
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
+
+  /**
+   * The current page.
+   */
+  _currentPage: '',
+
+
+  /**
+   * Store the current transition id.
+   * A transition is a chain of callbacks that will changes the current page:
+   * out -> after -> ready.
+   * The transition's id is used to avoid transition overlapping, that is the
+   * execution of callbacks of one transition while another transition is 
+   * started.
+   */
+  _currentTransition: 0,
+
 
   /**
    * True if Benjamin's is already configured. Used to handle multiple calls
@@ -121,7 +220,7 @@ var Benjamin = {
   /**
    * Pages settings.
    */
-  _pagesConf: { },
+  _pagesCallbacks: { },
 
 
   /**
@@ -148,7 +247,7 @@ var Benjamin = {
    * Note: this callback is NOT executed when the page is loaded server side 
    * (and neither if History.pushState is not supported).
    */
-  _after: function(next) {
+  _after: function(transitionId, next) {
     // console.log('Default ready callback');
     return next();
   },
@@ -161,9 +260,9 @@ var Benjamin = {
    * (and neither if History.pushState is not supported).
    */
   _afterPage: function(path, next) {
-    if (this._pagesConf[path] != null) {
-      if (typeof this._pagesConf[path]['after'] === 'function') {
-        return this._pagesConf[path]['after'](next);
+    if (this._pagesCallbacks[path] !== undefined) {
+      if (this._pagesCallbacks[path]['after'] !== undefined) {
+        return this._pagesCallbacks[path]['after'](next);
       }
     }
     // Callback not found
@@ -190,9 +289,9 @@ var Benjamin = {
    * (and neither if History.pushState is not supported).
    */
   _beforePage: function(path, next) {
-    if (this._pagesConf[path] != null) {
-      if (typeof this._pagesConf[path]['before'] === 'function') {
-        return this._pagesConf[path]['before'](next);
+    if (this._pagesCallbacks[path] !== undefined) {
+      if (this._pagesCallbacks[path]['before'] !== undefined) {
+        return this._pagesCallbacks[path]['before'](next);
       }
     }
     // Callback not found
@@ -208,7 +307,7 @@ var Benjamin = {
 
     // Select links filtering out external links
     var self = this;
-    $("a[href]").not("[data-bj-ignore='true']").each(function () {
+    $("a[href]").not("[data-bj-ignore]").each(function () {
       var link = this;
       if (self._isInternalUrl(link.href)) {
         links.push($(link));
@@ -224,14 +323,15 @@ var Benjamin = {
   },
 
 
-  // /**
-  //  * Decode HTML
-  //  */
-  // _decodeHtml: function(html) {
-  //   var txt = document.createElement("textarea");
-  //   txt.innerHTML = html;
-  //   return txt.value;
-  // },
+  /**
+   * Return true if the given value is equal to this._currentTransition.
+   *
+   * @param transitionId (int)
+   * @return (Boolean)
+   */
+  _checkTransitionId: function(transitionId) {
+    return transitionId === this._currentTransition;
+  },
 
 
   /**
@@ -360,18 +460,22 @@ var Benjamin = {
 
     // Get page's body
     var newBody = page.body;
-    // newBody = this._decodeHtml(newBody);
     var newBodyClass = page.bodyClass;
 
     // The following code will be executed in this order:
-    //   1. Before callback (this._before)
-    //   2. nextBefore
-    //   3. nextBeforePage: here we effectively change the page
-    //   4. nextAfter
-    //   5. nextAfterPage: here the page is changed and we call the callback
+    //   1. Out callback (this._out)
+    //   2. nextOut
+    //   3. Before callback (this._before)
+    //   4. nextBefore
+    //   5. nextBeforePage: here we effectively change the page
+    //   6. nextAfter
+    //   7. nextAfterPage: here the page is changed and we call the callback
 
-    // 5. Here the page is changed
-    function nextAfterPage() {
+    // 7. Here the page is changed
+    function nextAfterPage(tid) {
+      if (!this._checkTransitionId(tid)) {
+        return;
+      }
 
       // // If there was an hash in the url jump to it
       // if (linkHash !== '') {
@@ -384,40 +488,69 @@ var Benjamin = {
       return;
     }
 
-    // 4. Executed next to "after callback"
-    function nextAfter() {
-      this._afterPage(pagePath, nextAfterPage.bind(this));
+    // 6. Executed next to "after callback"
+    function nextAfter(tid) {
+      this._afterPage(pagePath, nextAfterPage.bind(this, tid));
     }
 
-    // 3. Executed next to "beforePage callback" ==> change the page
-    function nextBeforePage() {
+    // 5. Executed next to "beforePage callback" ==> change the page
+    function nextBeforePage(tid) {
+      if (!this._checkTransitionId(tid)) {
+        return;
+      }
 
       // Push state
       history.pushState({ 'url': linkUrl }, page.title, linkUrl);
 
       // Replace page (title and content)
-      this._replacePage(newTitle, newBody, newBodyClass);
+      this._replacePage(pagePath, newTitle, newBody, newBodyClass);
 
       // After callback
-      this._after(nextAfter.bind(this));
+      this._after(nextAfter.bind(this, tid));
     }
 
-    // 2. Executed next to "before callback"
-    function nextBefore() {
-      this._beforePage(pagePath, nextBeforePage.bind(this));
+    // 4. Executed next to "before callback"
+    function nextBefore(tid) {
+      if (!this._checkTransitionId(tid)) {
+        return;
+      }
+      this._beforePage(pagePath, nextBeforePage.bind(this, tid));
+    }
+
+    // 3. Before callbacks: here we start changing the page
+    function nextOutPage(tid) {
+      if (!this._checkTransitionId(tid)) {
+        return;
+      }
+      this._before(nextBefore.bind(this, tid));
+    }
+
+    // 2. Executed next to "out callback"
+    function nextOut(tid) {
+      // If this transition (tid) is different from the current one 
+      // (this._currentTransition) it means another transition is started, so 
+      // we can stop.
+      if (!this._checkTransitionId(tid)) {
+        return;
+      }
+      this._outPage(this._currentPage, nextOutPage.bind(this, tid));
     }
 
     // If the navigation is a "pop" => replace the page and go directly to
     // ready callbacks (nextAfterPage), without before/after callbacks and 
     // neither pushState
     if (pop) {
-      this._replacePage(newTitle, newBody, newBodyClass);
+      this._replacePage(pagePath, newTitle, newBody, newBodyClass);
       nextAfterPage.bind(this)();
       return;
     }
 
-    // 1. Before callbacks: here we start changing the page
-    this._before(nextBefore.bind(this));
+    // Create a new transition is (a transition for changing page start here
+    // and will finish on point 7, when the ready callback is executed).
+    var tid = this._newTransitionId();
+
+    // 1. Out callback: the current page is going to be changed
+    this._out(nextOut.bind(this, tid));
 
     return;
   },
@@ -434,6 +567,49 @@ var Benjamin = {
     var link = document.createElement("a");
     link.href = url;
     return this._navigateToLink(link, pop);
+  },
+
+
+   /**
+    * Put inside this._currentTransition a new (unique) value and return such 
+    * value.
+    *
+    * @return (int)
+    */
+  _newTransitionId: function() {
+    this._currentTransition = Date.now();
+    return this._currentTransition;
+  },
+
+
+  /**
+   * Callback when the current page is going to be changed. Executed on all 
+   * pages.
+   *
+   * Note: this callback is NOT executed when the page is loaded server side 
+   * (and neither if History.pushState is not supported).
+   */
+  _out: function(next) {
+    // console.log('Default out callback');
+    return next();
+  },
+
+
+ /**
+   * Callback when the page is going to be changed. Executed only for the 
+   * current page.
+   *
+   * Note: this callback is NOT executed when the page is loaded server side 
+   * (and neither if History.pushState is not supported).
+   */
+  _outPage: function(path, next) {
+    if (this._pagesCallbacks[path] !== undefined) {
+      if (this._pagesCallbacks[path]['out'] !== undefined) {
+        return this._pagesCallbacks[path]['out'](next);
+      }
+    }
+    // Callback not found
+    return next();
   },
 
 
@@ -549,9 +725,9 @@ var Benjamin = {
    * Note: this is executed when the page is loaded server side also.
    */
   _readyPage: function(path) {
-    if (this._pagesConf[path] != null) {
-      if (typeof this._pagesConf[path]['ready'] === 'function') {
-        this._pagesConf[path]['ready']();
+    if (this._pagesCallbacks[path] !== undefined) {
+      if (this._pagesCallbacks[path]['ready'] !== undefined) {
+        return this._pagesCallbacks[path]['ready']();
       }
     }
     return;
@@ -560,13 +736,15 @@ var Benjamin = {
 
   /**
    * Replace page title, body and the body's class.
-   * Then re-bind all links inside the body.
+   * Then re-bind all links inside the body and set the current page inside
+   * this._currentPage.
    *
+   * @param pagePath (String)
    * @param title (String)
    * @param body (String) HTML content
    * @param bodyClass (String)
    */
-  _replacePage: function(title, body, bodyClass) {
+  _replacePage: function(pagePath, title, body, bodyClass) {
 
     // Replace page's title
     document.title = title;
@@ -579,6 +757,9 @@ var Benjamin = {
 
     // (Re-)Bind links
     this._bindLinks();
+
+    // Set current page
+    this._currentPage = pagePath;
 
     return;
   },
@@ -610,7 +791,15 @@ var Benjamin = {
    */
   _useStandardNavigation: function() {
     return (!history.pushState || this._pagesLoadedError);
-  },
+  }
 
 
-};
+}; // var Benjamin
+
+// Initialize the Benjamin object
+Benjamin.init();
+
+// Exports Benjamin as global name
+window.Benjamin = Benjamin;
+
+})();
