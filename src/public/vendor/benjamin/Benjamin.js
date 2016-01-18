@@ -118,7 +118,7 @@ var Benjamin = {
 
 
   /**
-   * Bind a callback on a page's event. The same as on(String, Object)
+   * Bind a callback on a page's event. The same as "on(String, Object)"
    *
    * @param pagePath (String)
    * @param callbacks (Object)
@@ -176,17 +176,6 @@ var Benjamin = {
 
 
   /**
-   * Store the current transition id.
-   * A transition is a chain of callbacks that will changes the current page:
-   * out -> after -> ready.
-   * The transition's id is used to avoid transition overlapping, that is the
-   * execution of callbacks of one transition while another transition is 
-   * started.
-   */
-  _currentTransition: 0,
-
-
-  /**
    * True if Benjamin's is already configured. Used to handle multiple calls
    * to Benjamin.config.
    */
@@ -197,6 +186,18 @@ var Benjamin = {
    * Current language directory. Loaded when loading pages.
    */
   _langDir: '',
+
+
+  /**
+   * Store the timestamp of the last transition.
+   * A transition is a chain of operations that will changes the current page.
+   * It starts when there is the intent to change the page's content and it 
+   * ends when the page is ready. In practice is composed by the sequence of
+   * these callbacks: out -> after -> ready.
+   * This transition's timestamp is used to stop the execution of a transition
+   * if a newer one is started.
+   */
+  _lastTransition: 0,
 
 
   // /**
@@ -271,35 +272,6 @@ var Benjamin = {
 
 
   /**
-   * Callback before change the page. Executed on all pages.
-   *
-   * Note: this callback is NOT executed when the page is loaded server side 
-   * (and neither if History.pushState is not supported).
-   */
-  _before: function(next) {
-    // console.log('Default ready callback');
-    return next();
-  },
-
-
-  /**
-   * Callback before the page is changed. Executed only for the current page.
-   *
-   * Note: this callback is NOT executed when the page is loaded server side 
-   * (and neither if History.pushState is not supported).
-   */
-  _beforePage: function(path, next) {
-    if (this._pagesCallbacks[path] !== undefined) {
-      if (this._pagesCallbacks[path]['before'] !== undefined) {
-        return this._pagesCallbacks[path]['before'](next);
-      }
-    }
-    // Callback not found
-    return next();
-  },
-
-
-  /**
    * Bind links inside 'body' (skipping external links).
    */
   _bindLinks: function(event) {
@@ -323,14 +295,25 @@ var Benjamin = {
   },
 
 
+   /**
+    * ...
+    *
+    * @return (int)
+    */
+  _createTransitionTimestamp: function() {
+    this._lastTransition = Date.now();
+    return this._lastTransition;
+  },
+
+
   /**
-   * Return true if the given value is equal to this._currentTransition.
+   * Return true if ...
    *
-   * @param transitionId (int)
+   * @param tt (int)
    * @return (Boolean)
    */
-  _checkTransitionId: function(transitionId) {
-    return transitionId === this._currentTransition;
+  _isTransitionOld: function(tt) {
+    return this._lastTransition > tt;
   },
 
 
@@ -427,7 +410,7 @@ var Benjamin = {
     var linkHash = this._getLinkHash(normLink);
 
     // If the link's path is the current path AND there is an hash in the url
-    // than don't change page.
+    // than do not change page.
     var currentPath = window.location.pathname;
     if (linkPath === currentPath && linkHash !== '') {
       // this._jumpToAnchor(linkHash);
@@ -463,17 +446,15 @@ var Benjamin = {
     var newBodyClass = page.bodyClass;
 
     // The following code will be executed in this order:
-    //   1. Out callback (this._out)
-    //   2. nextOut
-    //   3. Before callback (this._before)
-    //   4. nextBefore
-    //   5. nextBeforePage: here we effectively change the page
-    //   6. nextAfter
-    //   7. nextAfterPage: here the page is changed and we call the callback
+    //   1. out callback (this._out)
+    //   2. pageOut
+    //   3. after: here we effectively change the page
+    //   4. afterPage
+    //   5. ready: here the page is changed and we call the callback
 
-    // 7. Here the page is changed
-    function nextAfterPage(tid) {
-      if (!this._checkTransitionId(tid)) {
+    // 5. Here the page is ready (already changed)
+    function ready(tt) {
+      if (this._isTransitionOld(tt)) {
         return;
       }
 
@@ -488,14 +469,18 @@ var Benjamin = {
       return;
     }
 
-    // 6. Executed next to "after callback"
-    function nextAfter(tid) {
-      this._afterPage(pagePath, nextAfterPage.bind(this, tid));
+    // 4. Executed next to "after callback"
+    function afterPage(tt) {
+      if (this._isTransitionOld(tt)) {
+        return;
+      }
+      this._afterPage(pagePath, ready.bind(this, tt));
+      return;
     }
 
-    // 5. Executed next to "beforePage callback" ==> change the page
-    function nextBeforePage(tid) {
-      if (!this._checkTransitionId(tid)) {
+    // 3. Executed next to "outPage callback" ==> change the page
+    function after(tt) {
+      if (this._isTransitionOld(tt)) {
         return;
       }
 
@@ -506,34 +491,21 @@ var Benjamin = {
       this._replacePage(pagePath, newTitle, newBody, newBodyClass);
 
       // After callback
-      this._after(nextAfter.bind(this, tid));
-    }
+      this._after(afterPage.bind(this, tt));
 
-    // 4. Executed next to "before callback"
-    function nextBefore(tid) {
-      if (!this._checkTransitionId(tid)) {
-        return;
-      }
-      this._beforePage(pagePath, nextBeforePage.bind(this, tid));
-    }
-
-    // 3. Before callbacks: here we start changing the page
-    function nextOutPage(tid) {
-      if (!this._checkTransitionId(tid)) {
-        return;
-      }
-      this._before(nextBefore.bind(this, tid));
+      return;
     }
 
     // 2. Executed next to "out callback"
-    function nextOut(tid) {
-      // If this transition (tid) is different from the current one 
-      // (this._currentTransition) it means another transition is started, so 
-      // we can stop.
-      if (!this._checkTransitionId(tid)) {
+    function outPage(tt) {
+      // If this transition is older than the last one (this._lastTransition) 
+      // we can stop the execution here.
+      if (this._isTransitionOld(tt)) {
         return;
       }
-      this._outPage(this._currentPage, nextOutPage.bind(this, tid));
+
+      this._outPage(this._currentPage, after.bind(this, tt));
+      return;
     }
 
     // If the navigation is a "pop" => replace the page and go directly to
@@ -545,12 +517,13 @@ var Benjamin = {
       return;
     }
 
-    // Create a new transition is (a transition for changing page start here
-    // and will finish on point 7, when the ready callback is executed).
-    var tid = this._newTransitionId();
+    // Get the transition's timestamp. A transition for changing page starts 
+    // here and will finish at point 5, when the ready callback is 
+    // executed.
+    var tt = this._createTransitionTimestamp();
 
     // 1. Out callback: the current page is going to be changed
-    this._out(nextOut.bind(this, tid));
+    this._out(outPage.bind(this, tt));
 
     return;
   },
@@ -567,18 +540,6 @@ var Benjamin = {
     var link = document.createElement("a");
     link.href = url;
     return this._navigateToLink(link, pop);
-  },
-
-
-   /**
-    * Put inside this._currentTransition a new (unique) value and return such 
-    * value.
-    *
-    * @return (int)
-    */
-  _newTransitionId: function() {
-    this._currentTransition = Date.now();
-    return this._currentTransition;
   },
 
 
