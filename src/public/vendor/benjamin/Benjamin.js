@@ -513,7 +513,7 @@ var Benjamin = {
     // neither pushState
     if (pop) {
       this._replacePage(pagePath, newTitle, newBody, newBodyClass);
-      nextAfterPage.bind(this)();
+      ready.bind(this)();
       return;
     }
 
