@@ -97,17 +97,17 @@ var Benjamin = {
           // We run the init callback just now (binding this to window)
           first[property].call(window);
           break;
-        case 'after':
-          this._after = first[property];
+        case 'ready':
+          this._ready = first[property];
           break;
         case 'out':
           this._out = first[property];
           break;
-        case 'ready':
-          this._ready = first[property];
+        case 'insert':
+          this._insert = first[property];
           break;
         default:
-          console.log("Warning: invalid event name: " + property);
+          console.log("Warning: invalid callback name: " + property);
           break;
       }
 
@@ -138,12 +138,13 @@ var Benjamin = {
         continue;
       }
 
-      var validName = property === 'after' 
-        || property === 'out' 
-        || property === 'ready';
+      var validName = 
+        property === 'ready' || 
+        property === 'insert' || 
+        property === 'out';
         
       if (!validName) {
-        console.log("Warning: invalid event name: " + property);
+        console.log("Warning: invalid callback name: " + property);
         return;
       }
 
@@ -193,7 +194,7 @@ var Benjamin = {
    * A transition is a chain of operations that will changes the current page.
    * It starts when there is the intent to change the page's content and it 
    * ends when the page is ready. In practice is composed by the sequence of
-   * these callbacks: out -> after -> ready.
+   * these callbacks: out -> insert -> ready.
    * This transition's timestamp is used to stop the execution of a transition
    * if a newer one is started.
    */
@@ -243,27 +244,28 @@ var Benjamin = {
 
 
   /**
-   * Callback after the page is changed. Executed on all pages.
+   * Callback after the page is changed client side. Executed on all pages.
    *
    * Note: this callback is NOT executed when the page is loaded server side 
    * (and neither if History.pushState is not supported).
    */
-  _after: function(transitionId, next) {
+  _insert: function(next) {
     // console.log('Default ready callback');
     return next();
   },
 
 
   /**
-   * Callback after the page is changed. Executed only for the current page.
+   * Callback after the page is changed client side. Executed only for the 
+   * current page.
    *
    * Note: this callback is NOT executed when the page is loaded server side 
    * (and neither if History.pushState is not supported).
    */
-  _afterPage: function(path, next) {
+  _insertPage: function(path, next) {
     if (this._pagesCallbacks[path] !== undefined) {
-      if (this._pagesCallbacks[path]['after'] !== undefined) {
-        return this._pagesCallbacks[path]['after'](next);
+      if (this._pagesCallbacks[path]['insert'] !== undefined) {
+        return this._pagesCallbacks[path]['insert'](next);
       }
     }
     // Callback not found
@@ -385,7 +387,7 @@ var Benjamin = {
    * from the link.href property, and **must be an internal url**.
    *
    * If "pop" is false (default value) will be added the url in the history 
-   * with pushState and before/after/ready callbacks will be executed.
+   * with pushState and out/insert/ready callbacks will be executed.
    * If "pop" is true it means navigation is inside the history, so only the
    * ready callback is executed (like was a new load page) and pushState is
    * not used.
@@ -448,8 +450,8 @@ var Benjamin = {
     // The following code will be executed in this order:
     //   1. out callback (this._out)
     //   2. pageOut
-    //   3. after: here we effectively change the page
-    //   4. afterPage
+    //   3. insert: here we effectively change the page
+    //   4. insertPage
     //   5. ready: here the page is changed and we call the callback
 
     // 5. Here the page is ready (already changed)
@@ -469,17 +471,17 @@ var Benjamin = {
       return;
     }
 
-    // 4. Executed next to "after callback"
-    function afterPage(tt) {
+    // 4. Executed next to "insert callback"
+    function insertPage(tt) {
       if (this._isTransitionOld(tt)) {
         return;
       }
-      this._afterPage(pagePath, ready.bind(this, tt));
+      this._insertPage(pagePath, ready.bind(this, tt));
       return;
     }
 
     // 3. Executed next to "outPage callback" ==> change the page
-    function after(tt) {
+    function insert(tt) {
       if (this._isTransitionOld(tt)) {
         return;
       }
@@ -490,8 +492,8 @@ var Benjamin = {
       // Replace page (title and content)
       this._replacePage(pagePath, newTitle, newBody, newBodyClass);
 
-      // After callback
-      this._after(afterPage.bind(this, tt));
+      // Insert callback
+      this._insert(insertPage.bind(this, tt));
 
       return;
     }
@@ -504,13 +506,12 @@ var Benjamin = {
         return;
       }
 
-      this._outPage(this._currentPage, after.bind(this, tt));
+      this._outPage(this._currentPage, insert.bind(this, tt));
       return;
     }
 
     // If the navigation is a "pop" => replace the page and go directly to
-    // ready callbacks (nextAfterPage), without before/after callbacks and 
-    // neither pushState
+    // ready callbacks, without out/insert callbacks and neither pushState.
     if (pop) {
       this._replacePage(pagePath, newTitle, newBody, newBodyClass);
       ready.bind(this)();
