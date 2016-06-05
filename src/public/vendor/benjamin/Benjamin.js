@@ -76,13 +76,26 @@ var Benjamin = {
    */
   on: function(first, second) {
 
-    // If the first parameter is a string --> go to bind per-page events.
-    if (typeof first === 'string' || first instanceof String) {
+    // If the first parameter is a string --> Bind per-page events (the 
+    // object containing the events is in the second parameter).
+    if (this._isString(first)) {
       this.onPage(first, second);
       return;
     }
 
-    // Get events
+    // If the first parameter is an array --> Bind per-page events on each 
+    // string in the array (the object containing the events is in the second
+    // parameter).
+    if (this._isArray(first)) {
+      for (var i = 0; i < first.length; i++) {
+        if (this._isString(first[i])) {
+          this.onPage(first[i], second);
+        }
+      } // for
+      return;
+    } // if
+
+    // The first parameter is an object --> Get events
     for (var property in first) {
 
       if (!first.hasOwnProperty(property)) {
@@ -277,6 +290,22 @@ var Benjamin = {
 
 
   /**
+   * Return true if the variable is an Array
+   */
+  _isArray: function(elem) {
+    return $.isArray(elem);
+  },
+
+
+  /**
+   * Return true if the variable is a String
+   */
+  _isString: function(elem) {
+    return typeof elem === 'string' || elem instanceof String;
+  },
+
+
+  /**
    * Bind links inside 'body' (skipping external links).
    */
   _bindLinks: function(event) {
@@ -369,8 +398,6 @@ var Benjamin = {
 
     // Remove any trailing slash
     pagePath = this._removeTrailingSlash(pagePath);
-
-    console.log("getPagePath langDir: " + this._langDir);
 
     // Remove the language dir
     if (this._langDir.length !== 0) {
