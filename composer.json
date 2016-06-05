@@ -7,7 +7,9 @@
   ],
   "homepage": "https://github.com/netgloo/benjamin_core",
   "license": "MIT",
-  "authors": [{ "name": "Netgloo" }],
+  "authors": [{ 
+    "name": "Netgloo" 
+  }],
   "require": {
     "illuminate/support": "~5.1",
     "php" : ">=5.4.0"
