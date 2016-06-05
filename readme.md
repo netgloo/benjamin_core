@@ -9,7 +9,7 @@
 
 **Note:** This is the core code for Benjamin platform. If you need to install Benjamin go [here](http://github.com/netgloo/benjamin) instead.
 
-### Install
+### Install In Laravel
 
 Add the package via Composer:
 
@@ -53,7 +53,7 @@ echo $skeleton->echoPhrase('Hello, League!');
 ```
 -->
 
-### Change log
+### Change Log
 
 Please see [changelog](changelog.md) for more information what has changed recently.
 
