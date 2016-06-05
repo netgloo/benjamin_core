@@ -447,10 +447,7 @@ var Benjamin = {
     // than do not change page.
     var currentPath = window.location.pathname;
     if (linkPath === currentPath && linkHash !== '') {
-      // this._jumpToAnchor(linkHash);
-      // if (!back) {
-      //   history.pushState({ 'url': linkUrl }, title, linkUrl);
-      // }
+      location.hash = linkHash;
       return;
     }
 
@@ -492,11 +489,6 @@ var Benjamin = {
         return;
       }
 
-      // // If there was an hash in the url jump to it
-      // if (linkHash !== '') {
-      //   this._jumpToAnchor(linkHash);
-      // }
-
       this._ready();
       this._readyPage(pagePath);
 
@@ -518,11 +510,18 @@ var Benjamin = {
         return;
       }
 
-      // Push state
-      history.pushState({ 'url': linkUrl }, page.title, linkUrl);
-
       // Replace page (title and content)
       this._replacePage(pagePath, newTitle, newBody, newBodyClass);
+
+      // Push state
+      history.pushState({ 'url': linkPath }, page.title, linkPath);
+
+      // If there was an hash in the url jump to it
+      if (linkHash !== '') {
+        // TODO: this also push another state in the browser history while
+        // only one history state should be pushed
+        location.hash = linkHash;
+      }
 
       // In callback
       this._in(inPageNext.bind(this, tt));
@@ -643,17 +642,6 @@ var Benjamin = {
   _isInternalUrl: function(url) {
     return this._reInternalUrl.test(url);
   },
-
-
-  // /**
-  //  * Jump the browser view to the given anchor name (starting with #).
-  //  *
-  //  * @param name (String)
-  //  */
-  // _jumpToAnchor: function(name) {
-  //   // TODO
-  //   return;
-  // },
 
 
   /**
