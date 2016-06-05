@@ -2,6 +2,8 @@
 
 namespace Netgloo\BenjaminCore\Services;
 
+use Config;
+
 use App\Exceptions\PathNotFoundException;
 
 class LocaleService
@@ -14,7 +16,8 @@ class LocaleService
    */
   public static function getDefaultLang()
   {
-    return env('APP_LOCALE');
+    // return env('APP_LOCALE');
+    return Config::get('app.locale');
   }
 
 
@@ -91,6 +94,8 @@ class LocaleService
 
     // Get default language
     $defaultLang = self::getDefaultLang();
+
+    dd($defaultLang);
 
     // Init result object
     $pathInfo = new \stdClass();
