@@ -2,14 +2,13 @@
 
 namespace Netgloo\BenjaminCore\Http\Controllers;
 
-use App;
-
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 use Netgloo\BenjaminCore\Exceptions\PathNotFoundException;
 use Netgloo\BenjaminCore\Services\LocaleService;
 use Netgloo\BenjaminCore\Services\LocaleLinkService;
+
 
 class WebController extends BaseController
 {
@@ -29,10 +28,12 @@ class WebController extends BaseController
       return redirect(rtrim($request->path(), '/'), 301);
     }
 
-    // Parse the request path and set the locale value
+    // Parse the request path
     $pathInfo = LocaleService::parsePath($path);
     $pagePath = $pathInfo->pagePath;
-    App::setLocale($pathInfo->lang);
+
+    // Set the active language
+    LocaleService::setLang($pathInfo->lang);
 
     // 'index' is a reserved name
     if ($pagePath === '/index') {
@@ -69,7 +70,7 @@ class WebController extends BaseController
     // Return the requested view
     return view($showView, [
       'benjamin' => 'benjamin::html',
-      'activeLang' => App::getLocale(),
+      'activeLang' => LocaleService::getActiveLang(),
     ]);
   }
 

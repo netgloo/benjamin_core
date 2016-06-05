@@ -2,27 +2,39 @@
 
 namespace Netgloo\BenjaminCore\Services;
 
-use Config;
+use App;
+use Lang;
 
 use App\Exceptions\PathNotFoundException;
+
 
 class LocaleService
 {
 
   /**
-   * Returns the current 'defaultLang' value.
+   * Return the default 'lang' value.
    * 
    * @return (String)
    */
   public static function getDefaultLang()
   {
-    // return env('APP_LOCALE');
-    return Config::get('app.locale');
+    return App::getLocale();
   }
 
 
   /**
-   * Returns the list of available languages.
+   * Return the active 'lang' value.
+   * 
+   * @return (String)
+   */
+  public static function getActiveLang()
+  {
+    return Lang::getLocale();
+  }
+
+
+  /**
+   * Return the list of available languages.
    * 
    * @return (Array)
    */
@@ -33,7 +45,7 @@ class LocaleService
 
 
   /**
-   * Returns true if the multi-language support is enabled.
+   * Return true if the multi-language support is enabled.
    * 
    * It is enabled when more than one language is available il the list of
    * supported languages.
@@ -142,19 +154,36 @@ class LocaleService
   }
 
 
+  /**
+   * Change the current active language.
+   * 
+   * @return (String)
+   */
+  public static function setLang($langKey)
+  {
+    // Note: the Lang facade sets the active locale preserving the value
+    // returned from App::getLocale(). We need to preserve this value inside 
+    // the application since such value will be used to determine the default
+    // lang key and to compute urls (with or without the lang subdirectory).
+    // More here: http://goo.gl/yxHSYu
+    Lang::setLocale($langKey);
+    return;
+  }
+
+
   // --------------------------------------------------------------------------
   // PRIVATES 
   // --------------------------------------------------------------------------
 
   /**
-   * Stores the list of available languages. Use the method `getLangs` to 
+   * Store the list of available languages. Use the method `getLangs` to 
    * load/get this list.
    */
   private static $langs = null;
 
 
   /**
-   * Returns the list of available languages. Available languages are taken 
+   * Return the list of available languages. Available languages are taken 
    * from the directory `resources/lang`.
    * 
    * @return (Array)
