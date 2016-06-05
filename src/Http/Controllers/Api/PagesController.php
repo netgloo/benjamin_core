@@ -2,14 +2,15 @@
 
 namespace Netgloo\BenjaminCore\Http\Controllers\Api;
 
+use App;
+use Cache;
+
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 use Netgloo\BenjaminCore\Exceptions\PathNotFoundException;
 use Netgloo\BenjaminCore\Services\LocaleService;
 use Netgloo\BenjaminCore\Services\LocaleLinkService;
-
-use Cache;
 
 class PagesController extends BaseController
 {
@@ -57,7 +58,7 @@ class PagesController extends BaseController
     // Get the language directory from the current url and set the locale
     $path = $request->input('path');
     $pathInfo = LocaleService::parsePath($path);
-    app('translator')->setLocale($pathInfo->lang);
+    App::setLocale($pathInfo->lang);
 
     // Init the response object
     $resp = new \stdClass();
@@ -117,7 +118,10 @@ class PagesController extends BaseController
       // Page body
       $page->body = view(
         $viewName, 
-        ['benjamin' => 'benjamin::body']
+        [
+          'benjamin' => 'benjamin::body',
+          'activeLang' => App::getLocale(),
+        ]
       )->render();
 
       // bodyClass

@@ -3,6 +3,51 @@
 use Netgloo\BenjaminCore\Services\LocaleLinkService;
 use Netgloo\BenjaminCore\Services\LocaleService;
 
+
+/**
+ * Given the language key $lang, will return a link for switching to $lang
+ * remaining on the current page path.
+ * 
+ * The current page path is taken from the LocaleLinkService.
+ * 
+ * If the multi-language support is disabled this method will only return the 
+ * current page path.
+ * 
+ * @param $lang (String)
+ * @return (String)
+ */
+function langswitch($lang)
+{
+  // The page path (an absolute path, starting with '/')
+  $pagePath = LocaleLinkService::getPagePath();
+
+  // Check if the multi-language support is enabled
+  if (!LocaleService::isMultilangEnabled()) {
+    return $pagePath;
+  }
+
+  // Empty lang
+  if (empty($lang)) {
+    return $pagePath;
+  }
+
+  // Is it the default lang?
+  if ($lang === LocaleService::getDefaultLang()) {
+    return $pagePath;
+  }
+
+  // Get the list of available languages
+  $availableLangs = LocaleService::getAvailableLangs();
+
+  // Isn't the language supported?
+  if (!in_array($lang, $availableLangs)) {
+    return $pagePath;
+  }
+
+  return "/{$lang}{$pagePath}";
+}
+
+
 /**
  * Given an url, returns the actual link, taking in accounts the current 
  * language subdirectory and the current path. 
@@ -95,49 +140,5 @@ function trlink($url)
   }
 
   return $resultUrl;
-}
-
-
-/**
- * Given the language key $lang, will return a link for switching to $lang
- * remaining on the current page path.
- * 
- * The current page path is taken from the LocaleLinkService.
- * 
- * If the multi-language support is disabled this method will only return the 
- * current page path.
- * 
- * @param $lang (String)
- * @return (String)
- */
-function langswitch($lang)
-{
-  // The page path (an absolute path, starting with '/')
-  $pagePath = LocaleLinkService::getPagePath();
-
-  // Check if the multi-language support is enabled
-  if (!LocaleService::isMultilangEnabled()) {
-    return $pagePath;
-  }
-
-  // Empty lang
-  if (empty($lang)) {
-    return $pagePath;
-  }
-
-  // Is it the default lang?
-  if ($lang === LocaleService::getDefaultLang()) {
-    return $pagePath;
-  }
-
-  // Get the list of available languages
-  $availableLangs = LocaleService::getAvailableLangs();
-
-  // Isn't the language supported?
-  if (!in_array($lang, $availableLangs)) {
-    return $pagePath;
-  }
-
-  return "/{$lang}{$pagePath}";
 }
 
