@@ -31,23 +31,27 @@ var Benjamin = {
         history.replaceState({ 'url': currentUrl }, currentTitle, currentUrl);
       }
 
-      // Current page
-      this._currentPage = this._getPagePath(window.location.pathname);
-
       // Start load pages (async)
-      this._loadPages();
+      var self = this;
+      this._loadPages(function() {
 
-      // When the DOM is ready...
-      $(document).ready(function () {
+        // Set the current page: we compute this after _loadPages since it 
+        // loads the current langDir also
+        self._currentPage = self._getPagePath(window.location.pathname);
 
-        // Bind links inside the body
-        this._bindLinks();
+        // When pages are loded and the DOM is ready
+        $(document).ready(function() {
 
-        // Calls to ready callbacks
-        this._ready();
-        this._readyPage(this._currentPage);
+          // Bind links inside the body
+          self._bindLinks();
 
-      }.bind(this));
+          // Calls to ready callbacks
+          self._ready();
+          self._readyPage(self._currentPage);
+
+        }.bind(self));
+
+      }); // this._loadPages
 
     } // if (!this._isConfigured)
 
@@ -86,7 +90,7 @@ var Benjamin = {
       }
 
       if (typeof first[property] !== 'function') {
-        console.log(
+        this._log(
           "Warning: the callback for " + property + " is not a function"
         );
         return;
@@ -107,7 +111,7 @@ var Benjamin = {
           this._in = first[property];
           break;
         default:
-          console.log("Warning: invalid callback name: " + property);
+          this._log("Warning: invalid callback name: " + property);
           break;
       }
 
@@ -127,7 +131,7 @@ var Benjamin = {
 
     // Check pagePath
     if (pagePath.length === 0 || pagePath.charAt(0) !== '/') {
-      console.log("Warning: invalid page name: " + pagePath);
+      this._log("Warning: invalid page name: " + pagePath);
       return;
     }
 
@@ -144,12 +148,12 @@ var Benjamin = {
         property === 'in';
         
       if (!validName) {
-        console.log("Warning: invalid callback name: " + property);
+        this._log("Warning: invalid callback name: " + property);
         return;
       }
 
       if (typeof callbacks[property] !== 'function') {
-        console.log(
+        this._log(
           "Warning: the callback for " + property + " is not a function"
         );
         return;
@@ -250,7 +254,7 @@ var Benjamin = {
    * (and neither if History.pushState is not supported).
    */
   _in: function(next) {
-    // console.log('Default ready callback');
+    // this._log('Default ready callback');
     return next();
   },
 
@@ -297,7 +301,7 @@ var Benjamin = {
 
 
    /**
-    * ...
+    * Create a transition timestamp and set it to _lastTransition.
     *
     * @return (int)
     */
@@ -308,7 +312,7 @@ var Benjamin = {
 
 
   /**
-   * Return true if ...
+   * Return true if the given timestamp tt is older than the _lastTransition.
    *
    * @param tt (int)
    * @return (Boolean)
@@ -365,6 +369,8 @@ var Benjamin = {
 
     // Remove any trailing slash
     pagePath = this._removeTrailingSlash(pagePath);
+
+    console.log("getPagePath langDir: " + this._langDir);
 
     // Remove the language dir
     if (this._langDir.length !== 0) {
@@ -435,7 +441,7 @@ var Benjamin = {
 
     // Page not found
     if (page === null) {
-      console.log('Error: page not found: ' + pagePath);
+      this._log('Error: page not found: ' + pagePath);
       return;
     }
 
@@ -551,7 +557,7 @@ var Benjamin = {
    * (and neither if History.pushState is not supported).
    */
   _out: function(next) {
-    // console.log('Default out callback');
+    // this._log('Default out callback');
     return next();
   },
 
@@ -649,8 +655,11 @@ var Benjamin = {
    *
    * If the ajax call will fail, the variable '_pagesLoadedError' will be 
    * setted to true.
+   *
+   * @param completeCallback (Function) This function will be called when
+   *   the ajax call completes.
    */
-  _loadPages: function() {
+  _loadPages: function(completeCallback) {
     var self = this;
     $.ajax({
       url: self._pagesApiUrl,
@@ -661,13 +670,21 @@ var Benjamin = {
         self._pages = data.pages;
       },
       error: function() {
-        console.log('Failed loading pages from ' + self._pagesApiUrl);
+        self._log('Failed loading pages from ' + self._pagesApiUrl);
         self._pagesLoadedError = true;
-      }
+      },
+      complete: completeCallback,
     });
     return;
   },
 
+
+  /**
+   * Log a text message with console.log
+   */
+  _log: function(message) {
+    console.log('Benjamin: ' + message);
+  },
 
   /**
    * Callback when the page is ready. Executed on all pages.
@@ -675,7 +692,7 @@ var Benjamin = {
    * Note: this is executed when the page is loaded server side also.
    */
   _ready: function() {
-    // console.log('Default ready callback');
+    // this._log('Default ready callback');
     return;
   },
 
