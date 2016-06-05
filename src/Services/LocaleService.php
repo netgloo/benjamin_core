@@ -95,8 +95,6 @@ class LocaleService
     // Get default language
     $defaultLang = self::getDefaultLang();
 
-    dd($defaultLang);
-
     // Init result object
     $pathInfo = new \stdClass();
     $pathInfo->lang = $defaultLang;
